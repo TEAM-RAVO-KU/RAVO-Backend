@@ -9,7 +9,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
-import ravo.ravobackend.coldstandby.tasklet.MySqlBackupTasklet;
+import ravo.ravobackend.coldstandby.tasklet.DumpBackupTasklet;
 
 @Configuration
 public class ColdStandbyJobConfig {
@@ -24,7 +24,7 @@ public class ColdStandbyJobConfig {
     }
 
     @Bean
-    public Step dumpStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, MySqlBackupTasklet t) {
+    public Step dumpStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, DumpBackupTasklet t) {
         return new StepBuilder("dumpStep", jobRepository)
                 .tasklet(t, platformTransactionManager)
                 .build();
