@@ -19,10 +19,16 @@ public class MySqlBackupStrategy implements DatabaseBackupStrategy {
         command.add("mysqldump");
         command.add("-h");
         command.add(dbInfo.getHost());
+        command.add("-P");
+        command.add(dbInfo.getPort());
         command.add("-u");
         command.add(dbInfo.getUsername());
         command.add("--password=" + dbInfo.getPassword());
+        command.add("--add-drop-database");
+        command.add("--databases");
         command.add(dbInfo.getDatabaseName());
+        command.add("--single-transaction");
+        command.add("--quick");
 
         // 출력 파일 경로 및 이름 설정
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
