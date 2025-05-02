@@ -1,4 +1,4 @@
-package ravo.ravobackend.coldstandby.tasklet;
+package ravo.ravobackend.coldstandby;
 
 import lombok.Getter;
 

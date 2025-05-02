@@ -1,6 +1,7 @@
-package ravo.ravobackend.coldstandby.tasklet;
+package ravo.ravobackend.coldstandby.backup;
 
 import org.springframework.stereotype.Component;
+import ravo.ravobackend.coldstandby.DatabaseInfo;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

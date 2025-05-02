@@ -1,4 +1,4 @@
-package ravo.ravobackend.coldstandby.tasklet;
+package ravo.ravobackend.coldstandby.backup;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.StepContribution;
@@ -7,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ravo.ravobackend.coldstandby.DatabaseInfo;
 
 import java.io.File;
 

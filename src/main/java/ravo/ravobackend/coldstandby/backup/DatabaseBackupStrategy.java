@@ -1,4 +1,6 @@
-package ravo.ravobackend.coldstandby.tasklet;
+package ravo.ravobackend.coldstandby.backup;
+
+import ravo.ravobackend.coldstandby.DatabaseInfo;
 
 public interface DatabaseBackupStrategy {
 
