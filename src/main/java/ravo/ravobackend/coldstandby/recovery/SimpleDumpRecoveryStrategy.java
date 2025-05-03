@@ -24,7 +24,6 @@ public class SimpleDumpRecoveryStrategy implements DatabaseRecoveryStrategy {
         command.add("-u");
         command.add(dbInfo.getUsername());
         command.add("--password=" + dbInfo.getPassword());
-        //command.add(dbInfo.getDatabaseName());
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectInput(dumpFile.toFile());  // SQL 파일을 stdin으로 전달

@@ -44,6 +44,5 @@ public class MySqlBackupStrategy implements DatabaseBackupStrategy {
             throw new RuntimeException("mysqldump 실패");
         }
         System.out.println("백업 완료: " + outputFile);
-        // exitCode가 0이면 성공적으로 파일 생성
     }
 }

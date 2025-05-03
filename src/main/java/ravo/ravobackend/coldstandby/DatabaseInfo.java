@@ -18,10 +18,7 @@ public class DatabaseInfo {
         this.password = password;
     }
 
-    public static DatabaseInfo from(String url,
-                                    String username,
-                                    String password) {
-
+    public static DatabaseInfo from(String url, String username, String password) {
         String hostPortDb = url.substring("jdbc:mysql://".length()).split("\\?")[0];
         String host = hostPortDb.split(":")[0];
         String port = hostPortDb.split(":")[1].split("/")[0];

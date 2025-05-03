@@ -38,7 +38,7 @@ public class DumpRecoveryTasklet implements Tasklet {
 
         DatabaseInfo dbInfo = DatabaseInfo.from(url, username, password);
         Path dir = Paths.get(outDir);
-        //가장 최근에 업데이트 된 sql dump를 찾는다.
+        //가장 최근에 업데이트 된 sql dump 기반으로 백업 수행
         Path latest = Files.list(dir)
                 .filter(p -> p.getFileName().toString().startsWith("active_db_backup_"))
                 .sorted((p1, p2) -> Long.compare(p2.toFile().lastModified(), p1.toFile().lastModified()))

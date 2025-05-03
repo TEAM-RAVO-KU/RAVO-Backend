@@ -12,6 +12,7 @@ import java.nio.file.Path;
 @Getter
 @Setter
 public class BackupProps {
+
     private Path dumpDir;
     private String mysqldumpExe;
 }
