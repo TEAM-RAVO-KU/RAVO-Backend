@@ -17,7 +17,6 @@ import javax.sql.DataSource;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -27,8 +26,8 @@ class FullBackupTaskletTest {
     private FullBackupTasklet fullBackupTasklet;
 
     @Autowired
-    @Qualifier("liveDataSource")
-    private DataSource liveDataSource;
+    @Qualifier("activeDataSource")
+    private DataSource activeDataSource;
 
     @Autowired
     @Qualifier("standbyDataSource")
@@ -39,7 +38,7 @@ class FullBackupTaskletTest {
 
     @BeforeEach
     void setUp() {
-        liveJdbcTemplate = new JdbcTemplate(liveDataSource);
+        liveJdbcTemplate = new JdbcTemplate(activeDataSource);
         standbyJdbcTemplate = new JdbcTemplate(standbyDataSource);
     }
 
