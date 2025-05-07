@@ -12,9 +12,9 @@ import javax.sql.DataSource;
 public class DataSourceConfig {
 
     // liveDataSource 를 default dataSource로 등록
-    @Bean(name = {"dataSource", "liveDataSource"})
+    @Bean(name = {"dataSource", "activeDataSource"})
     @Primary
-    @ConfigurationProperties(prefix = "spring.datasource.live")
+    @ConfigurationProperties(prefix = "spring.datasource.active")
     public DataSource liveDataSource() {
         return DataSourceBuilder.create().build();
     }
