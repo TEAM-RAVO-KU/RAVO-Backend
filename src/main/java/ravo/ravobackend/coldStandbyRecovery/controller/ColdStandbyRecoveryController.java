@@ -2,6 +2,7 @@ package ravo.ravobackend.coldStandbyRecovery.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,5 +19,12 @@ public class ColdStandbyRecoveryController {
     public ResponseEntity<String> recover(@RequestBody RecoveryRequest request) throws Exception {
         recoveryService.recover(request.getFileName());
         return ResponseEntity.ok("recovery success : " + request.getFileName());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleError(Exception ex) {
+        return ResponseEntity
+                .status(500)
+                .body("Failed to recovery: " + ex.getMessage());
     }
 }
