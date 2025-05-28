@@ -50,4 +50,10 @@ public class DataSourceConfig {
     public JdbcTemplate standbyJdbcTemplate(@Qualifier("standbyDataSource") DataSource ds) {
         return new JdbcTemplate(ds);
     }
+
+    @Bean
+    @Primary
+    public JdbcTemplate activeJdbcTemplate(@Qualifier("activeDataSource") DataSource ds) {
+        return new JdbcTemplate(ds);
+    }
 }
