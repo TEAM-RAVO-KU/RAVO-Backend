@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -26,9 +27,13 @@ public class StandbyConsumer {
 
     @Autowired
     private KafkaListenerEndpointRegistry registry;
+
     private List<String> queue = new LinkedList<>();
+
     @Autowired
+    @Qualifier("activeJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
+
     @KafkaListener(
             id = "integrity-data-standby",
             topics = "ravo_db.ravo_db.integrity_data",
