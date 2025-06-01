@@ -1,112 +1,105 @@
 package ravo.ravobackend.coldStandbyBackup.backup;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import ravo.ravobackend.coldStandbyBackup.domain.BackupTarget;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Transactional
 class MySqlBackupStrategyTest {
 
     @Autowired
     private MySqlBackupStrategy strategy;
 
     @Autowired
+    @Qualifier("activeJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Value("${spring.datasource.active.jdbc-url}")
-    private String jdbcUrl;
+    @Autowired
+    @Qualifier("activeDataSourceProperties")
+    private DataSourceProperties dataSourceProperties;
 
-    @Value("${spring.datasource.active.username}")
-    private String username;
+    @Value("backup.output-dir")
+    private Path outputDir;
 
-    @Value("${spring.datasource.active.password}")
-    private String password;
+    @BeforeEach
+    void setUp() throws Exception {
+        // 1) 백업 폴더를 깨끗하게 초기화
+        if (Files.exists(outputDir)) {
+            Files.walk(outputDir)
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+        Files.createDirectories(outputDir);
 
-    @Value("${spring.datasource.active.driver-class-name}")
-    private String driverClassName;
+        // 2) 외래 키 제약 해제 후 이전 테이블 삭제
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS order_item");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS orders");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS users");
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
 
-    @Value("${backup.output-dir}")
-    private String outputDir;
-
-    @Test
-    @DisplayName("MySQL 덤프 백업 시, 스키마 생성 및 더미 데이터까지 포함된 SQL 파일이 만들어져야 한다")
-    void backupTest() throws Exception {
-        //given
-        /**
-         * 트랜잭션을 지원하는 테스트용 테이블 생성 (InnoDB 엔진 사용)
-         */
+        // 3) 새 테이블 생성
         jdbcTemplate.execute(
-                "CREATE TABLE IF NOT EXISTS users (" +
-                        "  id INT PRIMARY KEY," +
+                "CREATE TABLE users (" +
+                        "  id INT PRIMARY KEY, " +
                         "  name VARCHAR(100) NOT NULL" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
         jdbcTemplate.execute(
-                "CREATE TABLE IF NOT EXISTS orders (" +
-                        "  id INT PRIMARY KEY," +
-                        "  user_id INT NOT NULL," +
-                        "  order_date DATETIME NOT NULL," +
+                "CREATE TABLE orders (" +
+                        "  id INT PRIMARY KEY, " +
+                        "  user_id INT NOT NULL, " +
+                        "  order_date DATETIME NOT NULL, " +
                         "  FOREIGN KEY (user_id) REFERENCES users(id)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
         jdbcTemplate.execute(
-                "CREATE TABLE IF NOT EXISTS order_item (" +
-                        "  id INT PRIMARY KEY," +
-                        "  order_id INT NOT NULL," +
-                        "  product_name VARCHAR(200) NOT NULL," +
-                        "  quantity INT NOT NULL," +
+                "CREATE TABLE order_item (" +
+                        "  id INT PRIMARY KEY, " +
+                        "  order_id INT NOT NULL, " +
+                        "  product_name VARCHAR(200) NOT NULL, " +
+                        "  quantity INT NOT NULL, " +
                         "  FOREIGN KEY (order_id) REFERENCES orders(id)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
 
-        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-        jdbcTemplate.execute("TRUNCATE TABLE order_item");
-        jdbcTemplate.execute("TRUNCATE TABLE orders");
-        jdbcTemplate.execute("TRUNCATE TABLE users");
-        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-
-        // users 테이블에 사용자 2명
+        // 4) 더미 데이터 삽입
         jdbcTemplate.update("INSERT INTO users(id, name) VALUES (?, ?)", 1, "Alice");
         jdbcTemplate.update("INSERT INTO users(id, name) VALUES (?, ?)", 2, "Bob");
-
-        // orders 테이블에 각 사용자별 주문
         jdbcTemplate.update("INSERT INTO orders(id, user_id, order_date) VALUES (?, ?, NOW())", 1, 1);
         jdbcTemplate.update("INSERT INTO orders(id, user_id, order_date) VALUES (?, ?, NOW())", 2, 2);
+        jdbcTemplate.update("INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)", 1, 1, "ProductA", 2);
+        jdbcTemplate.update("INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)", 2, 1, "ProductB", 3);
+        jdbcTemplate.update("INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)", 3, 2, "ProductC", 1);
+    }
 
-        // order_item 테이블에 주문별 상품 아이템
-        jdbcTemplate.update(
-                "INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)",
-                1, 1, "ProductA", 2
-        );
-        jdbcTemplate.update(
-                "INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)",
-                2, 1, "ProductB", 3
-        );
-        jdbcTemplate.update(
-                "INSERT INTO order_item(id, order_id, product_name, quantity) VALUES (?, ?, ?, ?)",
-                3, 2, "ProductC", 1
-        );
-
-        BackupTarget db = strategy.buildBackupTarget(jdbcUrl, username, password, driverClassName);
-        Path backupDir = Paths.get(outputDir);
+    @Test
+    @DisplayName("MySQL 덤프 백업 시, 스키마와 더미 데이터가 포함된 SQL 파일이 생성되어야 한다")
+    void backupTest() throws Exception {
+        //given
+        BackupTarget db = strategy.buildBackupTarget(dataSourceProperties);
 
         //when
-        strategy.backup(db, backupDir);
+        strategy.backup(db, outputDir);
 
         //then
-        File dir = backupDir.toFile();
+        File dir = outputDir.toFile();
         assertTrue(dir.exists() && dir.isDirectory(), "백업 디렉토리가 존재해야 합니다.");
 
         File[] dumps = dir.listFiles((d, name) ->
