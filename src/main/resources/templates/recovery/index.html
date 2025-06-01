@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Cold-Standby Recovery (Thymeleaf)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #recoverBtn {
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #recoverBtn:disabled {
+            background-color: #ccc;
+            cursor: default;
+        }
+        .message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+<h1>Cold-Standby Recovery</h1>
+
+<!-- 에러/성공 메시지 표시 -->
+<div th:if="${errorMessage}" class="message error" th:text="${errorMessage}"></div>
+<div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
+
+<!-- 덤프 파일 선택 폼 -->
+<form th:action="@{/recovery/submit}" method="post">
+    <label for="filename">덤프 파일 선택:</label>
+    <select id="filename" name="filename">
+        <option value="">-- 덤프 파일을 선택하세요 --</option>
+        <!-- dumps는 Controller가 넘겨준 List<DumpFileDto> -->
+        <option th:each="dump : ${dumps}"
+                th:value="${dump.filename}"
+                th:text="${dump.filename}">
+        </option>
+    </select>
+    <button id="recoverBtn" type="submit" th:disabled="${#lists.isEmpty(dumps)}">
+        복구 시작
+    </button>
+</form>
+</body>
+</html>
