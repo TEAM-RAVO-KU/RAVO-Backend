@@ -37,7 +37,7 @@ public class ColdStandbyController {
             return "recovery/index";
         }
         recoveryService.recover(filename.trim());
-        model.addAttribute("successMessage", "복구 작업이 시작되었습니다: " + filename);
+        model.addAttribute("successMessage", "복구 작업이 완료되었습니다: " + filename);
 
         List<DumpFileDto> dumps = recoveryService.listDumpFiles();
         model.addAttribute("dumps", dumps);
