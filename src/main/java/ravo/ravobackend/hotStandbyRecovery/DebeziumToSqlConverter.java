@@ -1,4 +1,4 @@
-package ravo.ravobackend.hotStandbyPoc;
+package ravo.ravobackend.hotStandbyRecovery;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,9 +12,9 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class DebeziumToSqlConverter {
 
-    private static final String TABLE_NAME = "integrity_data"; // 실제 테이블명 맞게 수정
+    private static final String TABLE_NAME = "integrity_data";      // 일단 "integrity_data" table 에 한해서 CDC 적용
 
-    public static String convertDebeziumToSQL(String json) throws Exception {
+    public String convertDebeziumToSQL(String json) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(json);
         JsonNode payload = root.get("payload");
@@ -31,12 +31,12 @@ public class DebeziumToSqlConverter {
                 throw new IllegalArgumentException("Unsupported operation type: " + op);
         }
     }
-    private static String formatMillisToDateTime(long millis) {
+    private String formatMillisToDateTime(long millis) {
         LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault());
         return dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
-    private static String buildInsertSQL(JsonNode after) {
+    private String buildInsertSQL(JsonNode after) {
         int id = after.get("id").asInt();
         String data = after.get("data").isNull() ? null : after.get("data").asText();
         long checkedAt = after.get("checked_at").asLong();
@@ -52,7 +52,7 @@ public class DebeziumToSqlConverter {
         );
     }
 
-    private static String buildUpdateSQL(JsonNode before, JsonNode after) {
+    private String buildUpdateSQL(JsonNode before, JsonNode after) {
         int id = before.get("id").asInt();
         String data = after.get("data").isNull() ? null : after.get("data").asText();
         long checkedAt = after.get("checked_at").asLong();
@@ -68,7 +68,7 @@ public class DebeziumToSqlConverter {
     }
 
 
-    private static String buildDeleteSQL(JsonNode before) {
+    private String buildDeleteSQL(JsonNode before) {
         int id = before.get("id").asInt();
         return String.format(
                 "DELETE FROM %s WHERE id=%d;",
