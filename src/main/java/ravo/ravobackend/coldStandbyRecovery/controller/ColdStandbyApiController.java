@@ -2,16 +2,18 @@ package ravo.ravobackend.coldStandbyRecovery.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ravo.ravobackend.coldStandbyRecovery.controller.request.DumpFileDto;
 import ravo.ravobackend.coldStandbyRecovery.controller.request.RecoveryRequest;
 import ravo.ravobackend.coldStandbyRecovery.service.ColdStandbyRecoveryService;
 
+import java.io.IOException;
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
-public class ColdStandbyRecoveryController {
+@RequestMapping("/api/recovery")
+public class ColdStandbyApiController {
 
     private final ColdStandbyRecoveryService recoveryService;
 
