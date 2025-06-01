@@ -17,7 +17,13 @@ public class ColdStandbyApiController {
 
     private final ColdStandbyRecoveryService recoveryService;
 
-    @PostMapping("/api/recovery")
+    @GetMapping
+    public ResponseEntity<List<DumpFileDto>> listDumps() throws IOException {
+        List<DumpFileDto> dumps = recoveryService.listDumpFiles();
+        return ResponseEntity.ok(dumps);
+    }
+
+    @PostMapping
     public ResponseEntity<String> recover(@RequestBody RecoveryRequest request) throws Exception {
         recoveryService.recover(request.getFileName());
         return ResponseEntity.ok("recovery success : " + request.getFileName());
