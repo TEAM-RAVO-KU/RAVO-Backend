@@ -52,7 +52,7 @@ public class ColdStandbyRecoveryJobTest {
     @BeforeEach
     void setupMock() throws Exception {
         given(factory.getRecoveryStrategy(any())).willReturn(mockStrategy);
-        given(mockStrategy.buildRecoveryTarget(any(),any(),any(),any())).willReturn(mockTarget);
+        given(mockStrategy.buildRecoveryTarget(any())).willReturn(mockTarget);
         given(mockTarget.getDatabaseName()).willReturn("testDB");
         willDoNothing().given(mockStrategy).recover(any(),any());
     }

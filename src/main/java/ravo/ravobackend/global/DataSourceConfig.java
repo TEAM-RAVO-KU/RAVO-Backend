@@ -1,7 +1,6 @@
 package ravo.ravobackend.global;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.batch.BatchDataSource;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -9,51 +8,63 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.JdbcTransactionManager;
 
 import javax.sql.DataSource;
 
 @Configuration
 public class DataSourceConfig {
 
-    @Bean(name = {"dataSource", "activeDataSource"})
+    @Bean
     @Primary
-    @ConfigurationProperties(prefix = "spring.datasource.active")
-    public DataSource activeDataSource() {
-        return DataSourceBuilder.create().build();
-    }
-
-    @Bean
-    @ConfigurationProperties(prefix = "spring.datasource.standby")
-    public DataSource standbyDataSource() {
-        return DataSourceBuilder.create().build();
-    }
-
-    @Bean
     @ConfigurationProperties("spring.datasource.batch")
-    public DataSourceProperties batchDataSourceProperties() {
+    public DataSource batchDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    @Primary
+    public JdbcTransactionManager batchTransactionManager(DataSource dataSource) {
+        return new JdbcTransactionManager(dataSource);
+    }
+
+    @Bean
+    @ConfigurationProperties("spring.datasource.active")
+    public DataSourceProperties activeDataSourceProperties() {
         return new DataSourceProperties();
     }
 
-
-    @Bean
-    @BatchDataSource
-    public DataSource batchDataSource() {
-        return batchDataSourceProperties()
-                .initializeDataSourceBuilder()
-                .build();
+    @Bean(name = "activeDataSource")
+    public DataSource activeDataSource(
+            @Qualifier("activeDataSourceProperties") DataSourceProperties props
+    ) {
+        return props.initializeDataSourceBuilder().build();
     }
 
-    /**
-     * standby db로 write 하기 위해 추가
-     */
     @Bean
-    public JdbcTemplate standbyJdbcTemplate(@Qualifier("standbyDataSource") DataSource ds) {
+    @ConfigurationProperties("spring.datasource.standby")
+    public DataSourceProperties standbyDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean(name = "standbyDataSource")
+    public DataSource standbyDataSource(
+            @Qualifier("standbyDataSourceProperties") DataSourceProperties props
+    ) {
+        return props.initializeDataSourceBuilder().build();
+    }
+
+    @Bean(name = "activeJdbcTemplate")
+    public JdbcTemplate activeJdbcTemplate(
+            @Qualifier("activeDataSource") DataSource ds
+    ) {
         return new JdbcTemplate(ds);
     }
 
-    @Bean
-    @Primary
-    public JdbcTemplate activeJdbcTemplate(@Qualifier("activeDataSource") DataSource ds) {
+    @Bean(name = "standbyJdbcTemplate")
+    public JdbcTemplate standbyJdbcTemplate(
+            @Qualifier("standbyDataSource") DataSource ds
+    ) {
         return new JdbcTemplate(ds);
     }
 }

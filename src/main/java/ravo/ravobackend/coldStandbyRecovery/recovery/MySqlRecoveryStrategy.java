@@ -1,8 +1,10 @@
 package ravo.ravobackend.coldStandbyRecovery.recovery;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
 import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
+import ravo.ravobackend.global.util.JdbcUrlParser;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,19 +20,21 @@ public class MySqlRecoveryStrategy implements RecoveryStrategy {
     }
 
     @Override
-    public RecoveryTarget buildRecoveryTarget(String jdbcUrl, String username, String password, String driverClassName) {
-        // MySQL URL: jdbc:mysql://host:port/db?params
-        String core = jdbcUrl.substring("jdbc:mysql://".length()).split("\\?")[0];
-        String[] parts = core.split("/", 2);
-        String[] hp = parts[0].split(":", 2);
-        String host = hp[0];
-        String port = hp.length > 1 ? hp[1] : "3306";
-        String databaseName = parts.length > 1 ? parts[1] : "";
+    public RecoveryTarget buildRecoveryTarget(DataSourceProperties props) {
+        // 1) DataSourceProperties에서 필수 정보 가져오기
+        String jdbcUrl = props.getUrl();
+        String username = props.getUsername();
+        String password = props.getPassword();
+        String driverClassName = props.getDriverClassName();
 
+        // 2) JDBC URL 파싱
+        JdbcUrlParser.ParsedResult parsed = JdbcUrlParser.parse(jdbcUrl);
+
+        // 3) RecoveryTarget 빌더로 조립
         return RecoveryTarget.builder()
-                .host(host)
-                .port(port)
-                .databaseName(databaseName)
+                .host(parsed.getHost())
+                .port(parsed.getPort())
+                .databaseName(parsed.getDatabaseName())
                 .username(username)
                 .password(password)
                 .driverClassName(driverClassName)

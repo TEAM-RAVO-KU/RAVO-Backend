@@ -5,7 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,19 +26,12 @@ class MySqlRecoveryStrategyTest {
     private MySqlRecoveryStrategy strategy;
 
     @Autowired
+    @Qualifier("activeJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Value("${spring.datasource.active.jdbc-url}")
-    private String jdbcUrl;
-
-    @Value("${spring.datasource.active.username}")
-    private String username;
-
-    @Value("${spring.datasource.active.password}")
-    private String password;
-
-    @Value("${spring.datasource.active.driver-class-name}")
-    private String driverClassName;
+    @Autowired
+    @Qualifier("activeDataSourceProperties")
+    private DataSourceProperties dataSourceProperties;
 
     @Value("${backup.output-dir}")
     private String dumpDir;
@@ -67,7 +62,7 @@ class MySqlRecoveryStrategyTest {
         Files.writeString(dumpFile, sql);
         assertTrue(Files.exists(dumpFile), "덤프 파일이 생성되어야 합니다.");
 
-        RecoveryTarget recoveryTarget = strategy.buildRecoveryTarget(jdbcUrl, username, password, driverClassName);
+        RecoveryTarget recoveryTarget = strategy.buildRecoveryTarget(dataSourceProperties);
 
         //when
         strategy.recover(recoveryTarget, dumpFile);

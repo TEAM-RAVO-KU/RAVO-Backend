@@ -6,7 +6,10 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
 import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
 
@@ -23,17 +26,9 @@ public class DumpRecoveryTasklet implements Tasklet {
     @Value("${backup.output-dir}")
     private String backupDir;
 
-    @Value("${spring.datasource.active.jdbc-url}")
-    private String jdbcUrl;
-
-    @Value("${spring.datasource.active.username}")
-    private String username;
-
-    @Value("${spring.datasource.active.password}")
-    private String password;
-
-    @Value("${spring.datasource.active.driver-class-name}")
-    private String driverClassName;
+    @Autowired
+    @Qualifier("activeDataSourceProperties")
+    private DataSourceProperties dataSourceProperties;
 
     private final RecoveryStrategyFactory factory;
 
@@ -59,8 +54,8 @@ public class DumpRecoveryTasklet implements Tasklet {
         log.info("Starting recovery from dump file: {}", dumpPath);
 
         // 3) 전략 결정 및 RecoveryTarget 생성
-        RecoveryStrategy strategy = factory.getRecoveryStrategy(driverClassName);
-        RecoveryTarget target = strategy.buildRecoveryTarget(jdbcUrl, username, password, driverClassName);
+        RecoveryStrategy strategy = factory.getRecoveryStrategy(dataSourceProperties.getDriverClassName());
+        RecoveryTarget target = strategy.buildRecoveryTarget(dataSourceProperties);
 
         // 4) 복구 실행
         strategy.recover(target, dumpPath);
