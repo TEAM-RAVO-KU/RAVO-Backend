@@ -43,7 +43,7 @@
 <div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
 
 <!-- 덤프 파일 선택 폼 -->
-<form th:action="@{/recovery/submit}" method="post">
+<form th:action="@{/recovery}" method="post">
     <label for="filename">덤프 파일 선택:</label>
     <select id="filename" name="filename">
         <option value="">-- 덤프 파일을 선택하세요 --</option>
