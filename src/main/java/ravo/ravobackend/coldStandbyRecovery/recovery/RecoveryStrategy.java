@@ -1,7 +1,6 @@
 package ravo.ravobackend.coldStandbyRecovery.recovery;
 
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
+import ravo.ravobackend.global.DatabaseProperties;
 
 import java.nio.file.Path;
 
@@ -9,7 +8,5 @@ public interface RecoveryStrategy {
 
     boolean support(String driverClassName);
 
-    RecoveryTarget buildRecoveryTarget(DataSourceProperties dataSourceProperties);
-
-    void recover(RecoveryTarget recoveryTarget, Path dumpFile) throws Exception;
+    void recover(DatabaseProperties databaseProperties, Path dumpFile) throws Exception;
 }

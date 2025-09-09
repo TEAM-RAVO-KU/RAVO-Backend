@@ -1,10 +1,8 @@
 package ravo.ravobackend.coldStandbyBackup.backup;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.coldStandbyBackup.domain.BackupTarget;
-import ravo.ravobackend.global.util.JdbcUrlParser;
+import ravo.ravobackend.global.DatabaseProperties;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -23,28 +21,7 @@ public class MySqlBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public BackupTarget buildBackupTarget(DataSourceProperties props) {
-
-        String jdbcUrl = props.getUrl();
-        String username = props.getUsername();
-        String password = props.getPassword();
-        String driverClassName = props.getDriverClassName();
-
-        // 2) JDBC URL 파싱
-        JdbcUrlParser.ParsedResult parsed = JdbcUrlParser.parse(jdbcUrl);
-
-        return BackupTarget.builder()
-                .host(parsed.getHost())
-                .port(parsed.getPort())
-                .databaseName(parsed.getDatabaseName())
-                .username(username)
-                .password(password)
-                .driverClassName(driverClassName)
-                .build();
-    }
-
-    @Override
-    public void backup(BackupTarget backupTarget, Path backupDir) throws Exception{
+    public void backup(DatabaseProperties props, Path backupDir) throws Exception{
         // 1) 덤프 파일 저장 디렉터리 준비
         File dir = backupDir.toFile();
         if (!dir.exists() && !dir.mkdirs()) {
@@ -54,18 +31,18 @@ public class MySqlBackupStrategy implements BackupStrategy {
         // 2) mysqldump 커맨드 옵션 구성
         List<String> cmd = new ArrayList<>();
         cmd.add("mysqldump");
-        cmd.add("-h"); cmd.add(backupTarget.getHost());                     // 호스트 지정
-        cmd.add("-P"); cmd.add(backupTarget.getPort());                     // 포트 지정
-        cmd.add("-u"); cmd.add(backupTarget.getUsername());                 // 사용자 지정
-        cmd.add("--password=" + backupTarget.getPassword());                // 비밀번호 지정
+        cmd.add("-h"); cmd.add(props.getHost());                     // 호스트 지정
+        cmd.add("-P"); cmd.add(props.getPort());                     // 포트 지정
+        cmd.add("-u"); cmd.add(props.getUsername());                 // 사용자 지정
+        cmd.add("--password=" + props.getPassword());                // 비밀번호 지정
         cmd.add("--add-drop-database");                                 // 복원 시 DROP DATABASE 포함
-        cmd.add("--databases"); cmd.add(backupTarget.getDatabaseName());    // 덤프할 데이터베이스 이름
+        cmd.add("--databases"); cmd.add(props.getDatabase());    // 덤프할 데이터베이스 이름
         cmd.add("--single-transaction");                                // 인덱스 잠금 최소화
         cmd.add("--quick");                                             // 대용량 테이블도 빠르게 스트리밍
 
         // 3) 출력 파일명에 타임스탬프 추가
         String ts = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        File outFile = new File(dir, backupTarget.getDatabaseName() + "_cold_" + ts + ".sql");
+        File outFile = new File(dir, props.getDatabase() + "_cold_" + ts + ".sql");
 
         // 4) 외부 프로세스 실행 설정
         ProcessBuilder pb = new ProcessBuilder(cmd);
