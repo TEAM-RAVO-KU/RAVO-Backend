@@ -1,4 +1,4 @@
-package ravo.ravobackend.global;
+package ravo.ravobackend.global.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;

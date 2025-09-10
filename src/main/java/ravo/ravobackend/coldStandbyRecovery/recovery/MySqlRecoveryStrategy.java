@@ -2,7 +2,7 @@ package ravo.ravobackend.coldStandbyRecovery.recovery;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.global.DatabaseProperties;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import ravo.ravobackend.global.DatabaseProperties;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

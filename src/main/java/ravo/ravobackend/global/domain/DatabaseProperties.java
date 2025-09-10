@@ -1,4 +1,4 @@
-package ravo.ravobackend.global;
+package ravo.ravobackend.global.domain;
 
 import lombok.Data;
 

@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import ravo.ravobackend.global.DatabaseProperties;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.io.File;
 import java.nio.file.*;

@@ -1,6 +1,6 @@
 package ravo.ravobackend.coldStandbyRecovery.recovery;
 
-import ravo.ravobackend.global.DatabaseProperties;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.nio.file.Path;
 
