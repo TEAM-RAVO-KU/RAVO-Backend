@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import ravo.ravobackend.coldStandbyBackup.tasklet.DirectoryInitializerTasklet;
 import ravo.ravobackend.coldStandbyBackup.tasklet.DumpBackupTasklet;
-import ravo.ravobackend.coldStandbyBackup.tasklet.TargetDatabaseSelectorTasklet;
+import ravo.ravobackend.global.tasklet.TargetDatabaseSelectorTasklet;
 
 @Configuration
 @RequiredArgsConstructor
