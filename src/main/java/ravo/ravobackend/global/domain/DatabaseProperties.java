@@ -2,8 +2,10 @@ package ravo.ravobackend.global.domain;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class DatabaseProperties {
+public class DatabaseProperties implements Serializable {
 
     private String host;
 
