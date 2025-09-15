@@ -1,4 +1,4 @@
-package ravo.ravobackend.global.tasklet;
+package ravo.ravobackend.coldStandbyBackup.tasklet;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
