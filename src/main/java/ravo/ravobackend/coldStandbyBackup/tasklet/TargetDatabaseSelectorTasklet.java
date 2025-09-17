@@ -8,8 +8,8 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.global.constants.BackupTarget;
 import ravo.ravobackend.global.constants.JobParameterKeys;
+import ravo.ravobackend.global.constants.TargetDB;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 
 
@@ -27,12 +27,16 @@ public class TargetDatabaseSelectorTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
 
         ExecutionContext jobContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
-        String targetDatabase = contribution.getStepExecution().getJobParameters().getString(JobParameterKeys.TARGET);
-        if(targetDatabase == null) targetDatabase = BackupTarget.STANDBY;
-        DatabaseProperties props = targetDatabase.equals(BackupTarget.ACTIVE) ? activeDatabaseProperties : standbyDatabaseProperties;
+        String target = contribution.getStepExecution().getJobParameters().getString(JobParameterKeys.TARGET);
+
+        // 기본값 STANDBY 설정
+        TargetDB targetDB = (target == null) ? TargetDB.STANDBY : TargetDB.valueOf(target);
+
+        DatabaseProperties props = (targetDB == TargetDB.ACTIVE)? activeDatabaseProperties : standbyDatabaseProperties;
 
         jobContext.put(TARGET_DATABASE_PROPERTIES, props);
         log.info("[TargetDatabaseSelectorTasklet] target database : {}:{}/{}", props.getHost(), props.getPort(), props.getDatabase());
+
 
         return RepeatStatus.FINISHED;
     }
