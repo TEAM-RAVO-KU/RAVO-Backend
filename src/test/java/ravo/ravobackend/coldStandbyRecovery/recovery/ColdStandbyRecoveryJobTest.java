@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,9 +37,6 @@ public class ColdStandbyRecoveryJobTest {
     @MockitoBean
     private RecoveryStrategy mockStrategy;
 
-    @MockitoBean
-    private RecoveryTarget mockTarget;
-
     static Path tempDir;
 
     @DynamicPropertySource
@@ -52,8 +48,6 @@ public class ColdStandbyRecoveryJobTest {
     @BeforeEach
     void setupMock() throws Exception {
         given(factory.getRecoveryStrategy(any())).willReturn(mockStrategy);
-        given(mockStrategy.buildRecoveryTarget(any())).willReturn(mockTarget);
-        given(mockTarget.getDatabaseName()).willReturn("testDB");
         willDoNothing().given(mockStrategy).recover(any(),any());
     }
 

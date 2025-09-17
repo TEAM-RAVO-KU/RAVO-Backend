@@ -6,12 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import ravo.ravobackend.coldStandbyBackup.domain.BackupTarget;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.io.File;
 import java.nio.file.*;
@@ -30,12 +29,11 @@ class MySqlBackupStrategyTest {
     @Qualifier("activeJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    @Qualifier("activeDataSourceProperties")
-    private DataSourceProperties dataSourceProperties;
-
     @Value("backup.output-dir")
     private Path outputDir;
+
+    @Autowired
+    private DatabaseProperties standbyDatabaseProperties;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -92,23 +90,18 @@ class MySqlBackupStrategyTest {
     @Test
     @DisplayName("MySQL 덤프 백업 시, 스키마와 더미 데이터가 포함된 SQL 파일이 생성되어야 한다")
     void backupTest() throws Exception {
-        //given
-        BackupTarget db = strategy.buildBackupTarget(dataSourceProperties);
+        // given
+        Path outFile = outputDir.resolve("test.sql");
 
-        //when
-        strategy.backup(db, outputDir);
+        // when
+        strategy.backup(standbyDatabaseProperties, outFile);
 
-        //then
-        File dir = outputDir.toFile();
-        assertTrue(dir.exists() && dir.isDirectory(), "백업 디렉토리가 존재해야 합니다.");
+        // then
+        assertTrue(Files.exists(outputDir), "백업 디렉토리가 존재해야 합니다.");
+        assertTrue(Files.isDirectory(outputDir), "백업 디렉토리는 디렉토리여야 합니다.");
 
-        File[] dumps = dir.listFiles((d, name) ->
-                name.startsWith(db.getDatabaseName()) && name.endsWith(".sql")
-        );
-        assertNotNull(dumps, "덤프 파일 배열이 null 이면 안 됩니다.");
-        assertTrue(dumps.length > 0, "덤프 파일이 하나 이상 생성되어야 합니다.");
-
-        File latest = dumps[dumps.length - 1];
-        assertTrue(latest.length() > 0, "덤프 파일이 비어 있으면 안 됩니다.");
+        assertTrue(Files.exists(outFile), "지정한 파일명이 생성되어야 합니다.");
+        assertTrue(Files.isRegularFile(outFile), "생성된 파일은 일반 파일이어야 합니다.");
+        assertTrue(Files.size(outFile) > 0, "백업 파일이 비어 있으면 안 됩니다.");
     }
 }

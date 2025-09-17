@@ -1,18 +1,24 @@
 package ravo.ravobackend.coldStandbyRecovery.recovery;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
-import ravo.ravobackend.global.util.JdbcUrlParser;
+import ravo.ravobackend.global.domain.DatabaseProperties;
+import ravo.ravobackend.global.util.CommandRequest;
+import ravo.ravobackend.global.util.ShellCommandExecutor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class MySqlRecoveryStrategy implements RecoveryStrategy {
+
+    private final ShellCommandExecutor shellCommandExecutor;
 
     @Override
     public boolean support(String driverClassName) {
@@ -20,46 +26,29 @@ public class MySqlRecoveryStrategy implements RecoveryStrategy {
     }
 
     @Override
-    public RecoveryTarget buildRecoveryTarget(DataSourceProperties props) {
-        // 1) DataSourceProperties에서 필수 정보 가져오기
-        String jdbcUrl = props.getUrl();
-        String username = props.getUsername();
-        String password = props.getPassword();
-        String driverClassName = props.getDriverClassName();
+    public void recover(DatabaseProperties props, Path dumpFile) throws Exception {
+        List<String> cmd = buildMysqlCommand(props);
+        Map<String, String> env = new HashMap<>();
+        env.put("MYSQL_PWD", props.getPassword()); // 비밀번호를 환경변수로 전달
 
-        // 2) JDBC URL 파싱
-        JdbcUrlParser.ParsedResult parsed = JdbcUrlParser.parse(jdbcUrl);
+        log.info("Starting MySQL recovery from: {}", dumpFile);
 
-        // 3) RecoveryTarget 빌더로 조립
-        return RecoveryTarget.builder()
-                .host(parsed.getHost())
-                .port(parsed.getPort())
-                .databaseName(parsed.getDatabaseName())
-                .username(username)
-                .password(password)
-                .driverClassName(driverClassName)
-                .build();
+        shellCommandExecutor.execute(CommandRequest.builder()
+                .command(cmd)
+                .environmentVariables(env)
+                .inputFile(dumpFile.toFile())
+                .build());
+
+        log.info("MySQL recovery completed successfully from {}", dumpFile);
     }
 
-    @Override
-    public void recover(RecoveryTarget recoveryTarget, Path dumpFile) throws Exception {
+    private List<String> buildMysqlCommand(DatabaseProperties props) {
         List<String> cmd = new ArrayList<>();
         cmd.add("mysql");
-        cmd.add("-h"); cmd.add(recoveryTarget.getHost());
-        cmd.add("-P"); cmd.add(recoveryTarget.getPort());
-        cmd.add("-u"); cmd.add(recoveryTarget.getUsername());
-        cmd.add("--password=" + recoveryTarget.getPassword());
-        cmd.add(recoveryTarget.getDatabaseName());   // 복구할 DB 이름
-
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.redirectInput(dumpFile.toFile());
-        pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-        int exitCode = pb.start().waitFor();
-        if (exitCode != 0) {
-            throw new RuntimeException("mysql 복구 실패, exitCode=" + exitCode);
-        }
-
-        log.info("Recovery completed from {}", dumpFile);
+        cmd.add("-h"); cmd.add(props.getHost());
+        cmd.add("-P"); cmd.add(props.getPort());
+        cmd.add("-u"); cmd.add(props.getUsername());
+        cmd.add(props.getDatabase());   // 복구할 DB 이름
+        return cmd;
     }
 }

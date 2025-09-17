@@ -7,11 +7,10 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +29,8 @@ class MySqlRecoveryStrategyTest {
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    @Qualifier("activeDataSourceProperties")
-    private DataSourceProperties dataSourceProperties;
+    @Qualifier("activeDatabaseProperties")
+    private DatabaseProperties activeDatabaseProperties;
 
     @Value("${backup.output-dir}")
     private String dumpDir;
@@ -62,10 +61,8 @@ class MySqlRecoveryStrategyTest {
         Files.writeString(dumpFile, sql);
         assertTrue(Files.exists(dumpFile), "덤프 파일이 생성되어야 합니다.");
 
-        RecoveryTarget recoveryTarget = strategy.buildRecoveryTarget(dataSourceProperties);
-
         //when
-        strategy.recover(recoveryTarget, dumpFile);
+        strategy.recover(activeDatabaseProperties, dumpFile);
 
         //then
         Integer count = jdbcTemplate.queryForObject(

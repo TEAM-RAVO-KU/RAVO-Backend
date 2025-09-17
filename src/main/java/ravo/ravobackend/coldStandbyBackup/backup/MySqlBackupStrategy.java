@@ -1,21 +1,24 @@
 package ravo.ravobackend.coldStandbyBackup.backup;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.coldStandbyBackup.domain.BackupTarget;
-import ravo.ravobackend.global.util.JdbcUrlParser;
+import ravo.ravobackend.global.domain.DatabaseProperties;
+import ravo.ravobackend.global.util.CommandRequest;
+import ravo.ravobackend.global.util.ShellCommandExecutor;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MySqlBackupStrategy implements BackupStrategy {
+
+    private final ShellCommandExecutor shellCommandExecutor;
 
     @Override
     public boolean support(String driverClassName) {
@@ -23,62 +26,31 @@ public class MySqlBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public BackupTarget buildBackupTarget(DataSourceProperties props) {
+    public void backup(DatabaseProperties props, Path backupDir) throws Exception {
+        List<String> cmd = buildMysqlDumpCommand(props);
+        Map<String, String> env = new HashMap<>();
+        env.put("MYSQL_PWD", props.getPassword()); // 비밀번호를 환경변수로 전달
 
-        String jdbcUrl = props.getUrl();
-        String username = props.getUsername();
-        String password = props.getPassword();
-        String driverClassName = props.getDriverClassName();
+        log.info("Starting MySQL backup to: {}", backupDir);
 
-        // 2) JDBC URL 파싱
-        JdbcUrlParser.ParsedResult parsed = JdbcUrlParser.parse(jdbcUrl);
-
-        return BackupTarget.builder()
-                .host(parsed.getHost())
-                .port(parsed.getPort())
-                .databaseName(parsed.getDatabaseName())
-                .username(username)
-                .password(password)
-                .driverClassName(driverClassName)
-                .build();
+        shellCommandExecutor.execute(CommandRequest.builder()
+                .command(cmd)
+                .environmentVariables(env)
+                .outputFile(backupDir.toFile())
+                .build());
+        log.info("MySQL backup completed successfully");
     }
 
-    @Override
-    public void backup(BackupTarget backupTarget, Path backupDir) throws Exception{
-        // 1) 덤프 파일 저장 디렉터리 준비
-        File dir = backupDir.toFile();
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IllegalStateException("백업 디렉터리 생성 실패: " + dir.getAbsolutePath());
-        }
-
-        // 2) mysqldump 커맨드 옵션 구성
+    private List<String> buildMysqlDumpCommand(DatabaseProperties props) {
         List<String> cmd = new ArrayList<>();
         cmd.add("mysqldump");
-        cmd.add("-h"); cmd.add(backupTarget.getHost());                     // 호스트 지정
-        cmd.add("-P"); cmd.add(backupTarget.getPort());                     // 포트 지정
-        cmd.add("-u"); cmd.add(backupTarget.getUsername());                 // 사용자 지정
-        cmd.add("--password=" + backupTarget.getPassword());                // 비밀번호 지정
-        cmd.add("--add-drop-database");                                 // 복원 시 DROP DATABASE 포함
-        cmd.add("--databases"); cmd.add(backupTarget.getDatabaseName());    // 덤프할 데이터베이스 이름
-        cmd.add("--single-transaction");                                // 인덱스 잠금 최소화
-        cmd.add("--quick");                                             // 대용량 테이블도 빠르게 스트리밍
-
-        // 3) 출력 파일명에 타임스탬프 추가
-        String ts = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        File outFile = new File(dir, backupTarget.getDatabaseName() + "_cold_" + ts + ".sql");
-
-        // 4) 외부 프로세스 실행 설정
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.redirectOutput(outFile);                                   // stdout → SQL 파일
-        pb.redirectError(ProcessBuilder.Redirect.INHERIT);            // stderr → 콘솔
-
-        // 5) 프로세스 실행 및 종료 코드 확인
-        int exitCode = pb.start().waitFor();
-        if (exitCode != 0) {
-            throw new RuntimeException("mysqldump 실패, exitCode=" + exitCode);
-        }
-
-        // 6) 로그 출력
-        log.info("Cold standby 백업 완료: {}", outFile.getAbsolutePath());
+        cmd.add("-h"); cmd.add(props.getHost());                     // 호스트 지정
+        cmd.add("-P"); cmd.add(props.getPort());                     // 포트 지정
+        cmd.add("-u"); cmd.add(props.getUsername());                 // 사용자 지정
+        cmd.add("--add-drop-database");                              // 복원 시 DROP DATABASE 포함
+        cmd.add("--databases"); cmd.add(props.getDatabase());        // 덤프할 데이터베이스 이름
+        cmd.add("--single-transaction");                             // 인덱스 잠금 최소화
+        cmd.add("--quick");                                          // 대용량 테이블도 빠르게 스트리밍
+        return cmd;
     }
 }

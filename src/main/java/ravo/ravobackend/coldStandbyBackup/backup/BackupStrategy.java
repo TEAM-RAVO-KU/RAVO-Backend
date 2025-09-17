@@ -1,7 +1,6 @@
 package ravo.ravobackend.coldStandbyBackup.backup;
 
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import ravo.ravobackend.coldStandbyBackup.domain.BackupTarget;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.nio.file.Path;
 
@@ -9,7 +8,5 @@ public interface BackupStrategy {
 
     boolean support(String driverClassName);
 
-    BackupTarget buildBackupTarget(DataSourceProperties dataSourceProperties);
-
-    void backup(BackupTarget backupTarget, Path backupDir) throws Exception;
+    void backup(DatabaseProperties databaseProperties, Path backupDir) throws Exception;
 }

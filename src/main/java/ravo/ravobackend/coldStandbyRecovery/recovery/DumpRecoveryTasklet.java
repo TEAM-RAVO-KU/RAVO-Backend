@@ -6,12 +6,9 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.coldStandbyRecovery.domain.RecoveryTarget;
+import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -26,9 +23,7 @@ public class DumpRecoveryTasklet implements Tasklet {
     @Value("${backup.output-dir}")
     private String backupDir;
 
-    @Autowired
-    @Qualifier("activeDataSourceProperties")
-    private DataSourceProperties dataSourceProperties;
+    private final DatabaseProperties activeDatabaseProperties;
 
     private final RecoveryStrategyFactory factory;
 
@@ -54,12 +49,11 @@ public class DumpRecoveryTasklet implements Tasklet {
         log.info("Starting recovery from dump file: {}", dumpPath);
 
         // 3) 전략 결정 및 RecoveryTarget 생성
-        RecoveryStrategy strategy = factory.getRecoveryStrategy(dataSourceProperties.getDriverClassName());
-        RecoveryTarget target = strategy.buildRecoveryTarget(dataSourceProperties);
+        RecoveryStrategy strategy = factory.getRecoveryStrategy(activeDatabaseProperties.getDriverClassName());
 
         // 4) 복구 실행
-        strategy.recover(target, dumpPath);
-        log.info("Recovery completed successfully for database: {}", target.getDatabaseName());
+        strategy.recover(activeDatabaseProperties, dumpPath);
+        log.info("Recovery completed successfully for database: {}", activeDatabaseProperties.getDatabase());
 
         return RepeatStatus.FINISHED;
     }
