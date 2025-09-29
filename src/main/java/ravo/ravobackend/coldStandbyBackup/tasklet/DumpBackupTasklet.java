@@ -7,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.stereotype.Component;
+import ravo.ravobackend.coldStandbyBackup.backup.BackupRequest;
 import ravo.ravobackend.coldStandbyBackup.backup.BackupStrategy;
 import ravo.ravobackend.coldStandbyBackup.backup.BackupStrategyFactory;
 import ravo.ravobackend.global.constants.BackupType;
@@ -31,7 +32,13 @@ public class DumpBackupTasklet implements Tasklet {
         Path backupDir = Paths.get(jobContext.getString(BACKUP_OUT_FILE));
 
         BackupStrategy backupStrategy = factory.getBackupStrategy(BackupType.MYSQL_DUMP);
-        backupStrategy.backup(props, backupDir);
+
+        BackupRequest req = BackupRequest.builder()
+                .props(props)
+                .backupDir(backupDir)
+                .build();
+
+        backupStrategy.backup(req);
 
         return RepeatStatus.FINISHED;
     }

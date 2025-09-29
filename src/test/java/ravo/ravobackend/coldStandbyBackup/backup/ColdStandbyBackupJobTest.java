@@ -36,7 +36,7 @@ public class ColdStandbyBackupJobTest {
     void setupMock() throws Exception {
         given(factory.getBackupStrategy(any())).willReturn(mySqlBackupStrategy);
 
-        willDoNothing().given(mySqlBackupStrategy).backup(any(),any());
+        willDoNothing().given(mySqlBackupStrategy).backup(any());
     }
 
     @Test

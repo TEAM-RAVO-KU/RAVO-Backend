@@ -9,5 +9,5 @@ public interface BackupStrategy {
 
     boolean support(BackupType type);
 
-    void backup(DatabaseProperties databaseProperties, Path backupDir) throws Exception;
+    void backup(BackupRequest request) throws Exception;
 }

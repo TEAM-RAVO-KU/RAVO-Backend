@@ -3,6 +3,7 @@ package ravo.ravobackend.coldStandbyBackup.backup.dump;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ravo.ravobackend.coldStandbyBackup.backup.BackupRequest;
 import ravo.ravobackend.coldStandbyBackup.backup.BackupStrategy;
 import ravo.ravobackend.global.constants.BackupType;
 import ravo.ravobackend.global.domain.DatabaseProperties;
@@ -28,7 +29,10 @@ public class MySqlBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void backup(DatabaseProperties props, Path backupDir) throws Exception {
+    public void backup(BackupRequest request) throws Exception {
+        DatabaseProperties props = request.getProps();
+        Path backupDir = request.getBackupDir();
+
         List<String> cmd = buildMysqlDumpCommand(props);
         Map<String, String> env = new HashMap<>();
         env.put("MYSQL_PWD", props.getPassword()); // 비밀번호를 환경변수로 전달

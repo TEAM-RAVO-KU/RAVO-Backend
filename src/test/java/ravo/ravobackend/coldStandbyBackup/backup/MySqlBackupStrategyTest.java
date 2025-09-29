@@ -95,7 +95,11 @@ class MySqlBackupStrategyTest {
         Path outFile = outputDir.resolve("test.sql");
 
         // when
-        strategy.backup(standbyDatabaseProperties, outFile);
+        BackupRequest req = BackupRequest.builder()
+                .backupDir(outFile)
+                .props(standbyDatabaseProperties)
+                .build();
+        strategy.backup(req);
 
         // then
         assertTrue(Files.exists(outputDir), "백업 디렉토리가 존재해야 합니다.");
