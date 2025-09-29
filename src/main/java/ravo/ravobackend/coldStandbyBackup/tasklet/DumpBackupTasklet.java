@@ -16,22 +16,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static ravo.ravobackend.global.constants.JobExecutionContextKeys.BACKUP_OUT_FILE;
+import static ravo.ravobackend.global.constants.JobExecutionContextKeys.TARGET_DATABASE_PROPERTIES;
 
 @RequiredArgsConstructor
 @Component
 public class DumpBackupTasklet implements Tasklet {
-
-    private final DatabaseProperties standbyDatabaseProperties;
 
     private final BackupStrategyFactory factory;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         ExecutionContext jobContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
+        DatabaseProperties props = (DatabaseProperties) jobContext.get(TARGET_DATABASE_PROPERTIES);
         Path backupDir = Paths.get(jobContext.getString(BACKUP_OUT_FILE));
 
         BackupStrategy backupStrategy = factory.getBackupStrategy(BackupType.MYSQL_DUMP);
-        backupStrategy.backup(standbyDatabaseProperties, backupDir);
+        backupStrategy.backup(props, backupDir);
 
         return RepeatStatus.FINISHED;
     }

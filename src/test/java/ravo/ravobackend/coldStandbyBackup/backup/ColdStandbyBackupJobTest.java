@@ -27,16 +27,16 @@ public class ColdStandbyBackupJobTest {
     private BackupStrategyFactory factory;
 
     @MockitoBean
-    private BackupStrategy mockStrategy;
+    private BackupStrategy mySqlBackupStrategy;
 
     @Autowired
     private Job coldStandbyBackupJob;
 
     @BeforeEach
     void setupMock() throws Exception {
-        given(factory.getBackupStrategy(any())).willReturn(mockStrategy);
+        given(factory.getBackupStrategy(any())).willReturn(mySqlBackupStrategy);
 
-        willDoNothing().given(mockStrategy).backup(any(),any());
+        willDoNothing().given(mySqlBackupStrategy).backup(any(),any());
     }
 
     @Test
