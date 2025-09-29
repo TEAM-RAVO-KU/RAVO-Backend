@@ -10,9 +10,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
-import ravo.ravobackend.coldStandbyBackup.tasklet.DirectoryInitializerTasklet;
 import ravo.ravobackend.coldStandbyBackup.tasklet.DumpBackupTasklet;
-import ravo.ravobackend.coldStandbyBackup.tasklet.TargetDatabaseSelectorTasklet;
 
 @Configuration
 @RequiredArgsConstructor
@@ -35,20 +33,6 @@ public class ColdStandbyBackupConfig {
     @Bean
     public Step dumpBackupStep(DumpBackupTasklet t) {
         return new StepBuilder("dumpBackupStep", jobRepository)
-                .tasklet(t, transactionManager)
-                .build();
-    }
-
-    @Bean
-    public Step directoryInitializerStep(DirectoryInitializerTasklet t) {
-        return new StepBuilder("directoryInitializerStep", jobRepository)
-                .tasklet(t, transactionManager)
-                .build();
-    }
-
-    @Bean
-    public Step targetDatabaseSelectorStep(TargetDatabaseSelectorTasklet t) {
-        return new StepBuilder("targetDatabaseSelectorStep", jobRepository)
                 .tasklet(t, transactionManager)
                 .build();
     }
