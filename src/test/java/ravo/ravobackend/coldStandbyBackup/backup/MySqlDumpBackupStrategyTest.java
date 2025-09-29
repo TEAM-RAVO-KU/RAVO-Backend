@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import ravo.ravobackend.coldStandbyBackup.backup.dump.MySqlBackupStrategy;
+import ravo.ravobackend.coldStandbyBackup.backup.dump.MySqlDumpBackupStrategy;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.io.File;
@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class MySqlBackupStrategyTest {
+class MySqlDumpBackupStrategyTest {
 
     @Autowired
-    private MySqlBackupStrategy strategy;
+    private MySqlDumpBackupStrategy strategy;
 
     @Autowired
     @Qualifier("activeJdbcTemplate")

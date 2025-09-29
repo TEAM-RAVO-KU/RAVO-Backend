@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MySqlBackupStrategy implements BackupStrategy {
+public class MySqlDumpBackupStrategy implements BackupStrategy {
 
     private final ShellCommandExecutor shellCommandExecutor;
 
