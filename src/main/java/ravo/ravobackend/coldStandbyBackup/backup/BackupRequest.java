@@ -12,4 +12,5 @@ public class BackupRequest {
     private final DatabaseProperties props;
     private final Path backupDir;
     private final String gtidRange;
+    private final String firstBinlogFile;
 }
