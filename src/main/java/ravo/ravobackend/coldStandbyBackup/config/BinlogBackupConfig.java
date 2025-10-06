@@ -32,7 +32,7 @@ public class BinlogBackupConfig {
 
     @Bean
     public Step binlogBackupStep(BinlogBackupTasklet t) {
-        return new StepBuilder("dumpBackupStep", jobRepository)
+        return new StepBuilder("binlogBackupStep", jobRepository)
                 .tasklet(t, transactionManager)
                 .build();
     }
