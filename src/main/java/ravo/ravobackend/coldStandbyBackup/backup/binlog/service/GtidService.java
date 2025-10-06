@@ -54,7 +54,7 @@ public class GtidService {
      * 마지막으로 저장된 GTID 조회
      */
     public Optional<GTID> getLastSavedGtid(TargetDB targetDB) {
-        return gtidRepository.findLatestByDbName(targetDB.name())
+        return gtidRepository.findTop1ByDbNameOrderByCreatedAtDesc(targetDB.name())
                 .map(history -> {
                     log.info("Found last saved GTID - DB: {}, GTID: {}", targetDB.name(), history.getGtidSet());
                     return GTID.parse(history.getGtidSet());

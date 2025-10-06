@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface GtidRepository extends JpaRepository<GtidHistory, Long> {
 
-    @Query("SELECT g FROM GtidHistory g WHERE g.dbName = :dbName ORDER BY g.createdAt DESC LIMIT 1")
-    Optional<GtidHistory> findLatestByDbName(String dbName);
+    Optional<GtidHistory> findTop1ByDbNameOrderByCreatedAtDesc(String dbName);
+
 }
