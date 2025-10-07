@@ -8,32 +8,46 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.MySqlBinlogBackupStrategy;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.GTID;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.BinlogQueryService;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.GtidService;
+import ravo.ravobackend.coldStandbyBackup.backup.dump.MySqlDumpBackupStrategy;
+import ravo.ravobackend.global.constants.TargetDB;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 
 import java.io.File;
 import java.nio.file.*;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-class MySqlBackupStrategyTest {
+class MySqlBackupTest {
 
     @Autowired
-    private MySqlBackupStrategy strategy;
+    private MySqlDumpBackupStrategy dumpBackupStrategy;
 
     @Autowired
-    @Qualifier("activeJdbcTemplate")
+    private MySqlBinlogBackupStrategy binlogBackupStrategy;
+
+    @Autowired
+    @Qualifier("standbyJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Value("backup.output-dir")
+    @Value("${backup.output-dir}")
     private Path outputDir;
 
     @Autowired
     private DatabaseProperties standbyDatabaseProperties;
+
+    @Autowired
+    private GtidService gtidService;
+
+    @Autowired
+    private BinlogQueryService binlogQueryService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -89,12 +103,16 @@ class MySqlBackupStrategyTest {
 
     @Test
     @DisplayName("MySQL 덤프 백업 시, 스키마와 더미 데이터가 포함된 SQL 파일이 생성되어야 한다")
-    void backupTest() throws Exception {
+    void dumpBackup_should_create_dumpfile() throws Exception {
         // given
-        Path outFile = outputDir.resolve("test.sql");
+        Path outFile = outputDir.resolve("test-dump.sql");
+        BackupRequest req = BackupRequest.builder()
+                .backupDir(outFile)
+                .props(standbyDatabaseProperties)
+                .build();
 
         // when
-        strategy.backup(standbyDatabaseProperties, outFile);
+        dumpBackupStrategy.backup(req);
 
         // then
         assertTrue(Files.exists(outputDir), "백업 디렉토리가 존재해야 합니다.");
@@ -103,5 +121,46 @@ class MySqlBackupStrategyTest {
         assertTrue(Files.exists(outFile), "지정한 파일명이 생성되어야 합니다.");
         assertTrue(Files.isRegularFile(outFile), "생성된 파일은 일반 파일이어야 합니다.");
         assertTrue(Files.size(outFile) > 0, "백업 파일이 비어 있으면 안 됩니다.");
+    }
+
+
+    @Test
+    @DisplayName("MySQL binlog 백업 시, 스키마와 더미 데이터가 포함된 SQL 파일이 생성되어야 한다")
+    void GTID_backup_should_create_binlog_file() throws Exception {
+        //given
+        Path outFile = outputDir.resolve("test-binlog.sql");
+        GTID currentGtid = gtidService.getCurrentGtidFromStandby();
+        String firstBinlogFile = binlogQueryService.getFirstBinlogFile();
+
+        //when
+        gtidService.saveGtid(TargetDB.STANDBY, currentGtid);
+
+        jdbcTemplate.update("INSERT INTO users(id, name) VALUES (?, ?)", 3, "new user1");
+        jdbcTemplate.update("INSERT INTO users(id, name) VALUES (?, ?)", 4, "new user2");
+
+        //쿼리 실행 후 현재 gtid 다시 조회
+        currentGtid = gtidService.getCurrentGtidFromStandby();
+        Optional<GTID> lastSavedGtid = gtidService.getLastSavedGtid(TargetDB.STANDBY);
+
+        System.out.println("new current gtid: " + currentGtid.toString());
+        GTID gtidRange = gtidService.calculateGtidRange(currentGtid, lastSavedGtid.orElse(null)).orElseThrow();
+
+
+        BackupRequest req = BackupRequest.builder()
+                .backupDir(outFile)
+                .gtidRange(gtidRange.toString())
+                .props(standbyDatabaseProperties)
+                .firstBinlogFile(firstBinlogFile)
+                .build();
+
+        binlogBackupStrategy.backup(req);
+
+        //then
+        assertTrue(Files.exists(outputDir), "백업 디렉토리가 존재해야 합니다.");
+        assertTrue(Files.isDirectory(outputDir), "백업 디렉토리는 디렉토리여야 합니다.");
+        assertTrue(Files.exists(outFile), "지정한 파일명이 생성되어야 합니다.");
+        assertTrue(Files.isRegularFile(outFile), "생성된 파일은 일반 파일이어야 합니다.");
+        assertTrue(Files.size(outFile) > 0, "백업 파일이 비어 있으면 안 됩니다.");
+
     }
 }

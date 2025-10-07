@@ -1,12 +1,11 @@
 package ravo.ravobackend.coldStandbyBackup.backup;
 
-import ravo.ravobackend.global.domain.DatabaseProperties;
+import ravo.ravobackend.global.constants.BackupType;
 
-import java.nio.file.Path;
 
 public interface BackupStrategy {
 
-    boolean support(String driverClassName);
+    boolean support(BackupType type);
 
-    void backup(DatabaseProperties databaseProperties, Path backupDir) throws Exception;
+    void backup(BackupRequest request) throws Exception;
 }

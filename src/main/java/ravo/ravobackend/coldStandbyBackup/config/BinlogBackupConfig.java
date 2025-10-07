@@ -10,29 +10,29 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
-import ravo.ravobackend.coldStandbyBackup.tasklet.DumpBackupTasklet;
+import ravo.ravobackend.coldStandbyBackup.tasklet.BinlogBackupTasklet;
 
 @Configuration
 @RequiredArgsConstructor
-public class ColdStandbyBackupConfig {
+public class BinlogBackupConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
 
     @Bean
-    public Job coldStandbyBackupJob(Step targetDatabaseSelectorStep, Step directoryInitializerStep, Step dumpBackupStep) {
-        return new JobBuilder("coldStandbyBackupJob", jobRepository)
+    public Job binlogBackupJob(Step targetDatabaseSelectorStep, Step directoryInitializerStep, Step binlogBackupStep) {
+        return new JobBuilder("binlogBackupJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .flow(targetDatabaseSelectorStep)
                 .next(directoryInitializerStep)
-                .next(dumpBackupStep)
+                .next(binlogBackupStep)
                 .end()
                 .build();
     }
 
     @Bean
-    public Step dumpBackupStep(DumpBackupTasklet t) {
-        return new StepBuilder("dumpBackupStep", jobRepository)
+    public Step binlogBackupStep(BinlogBackupTasklet t) {
+        return new StepBuilder("binlogBackupStep", jobRepository)
                 .tasklet(t, transactionManager)
                 .build();
     }
