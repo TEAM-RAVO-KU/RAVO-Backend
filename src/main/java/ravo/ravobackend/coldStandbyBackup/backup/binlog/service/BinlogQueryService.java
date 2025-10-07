@@ -1,7 +1,7 @@
 package ravo.ravobackend.coldStandbyBackup.backup.binlog.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.BinlogInfo;
@@ -11,10 +11,13 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BinlogQueryService {
 
     private final DataSource standbyDataSource;
+
+    public BinlogQueryService(@Qualifier("standbyDataSource") DataSource standbyDataSource) {
+        this.standbyDataSource = standbyDataSource;
+    }
 
     /**
      * 현재 사용 중인 binlog 파일 목록 조회

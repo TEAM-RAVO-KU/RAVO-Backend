@@ -22,23 +22,23 @@ public class DataSourceConfig {
 
     @Bean
     @ConfigurationProperties("spring.datasource.active")
-    public DataSource activeDatasource() {
+    public DataSource activeDataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Bean
     @ConfigurationProperties("spring.datasource.standby")
-    public DataSource standbyDatasource() {
+    public DataSource standbyDataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Bean
-    public JdbcTemplate activeJdbcTemplate(@Qualifier("activeDatasource") DataSource ds) {
+    public JdbcTemplate activeJdbcTemplate(@Qualifier("activeDataSource") DataSource ds) {
         return new JdbcTemplate(ds);
     }
 
     @Bean
-    public JdbcTemplate standbyJdbcTemplate(@Qualifier("standbyDatasource") DataSource ds) {
+    public JdbcTemplate standbyJdbcTemplate(@Qualifier("standbyDataSource") DataSource ds) {
         return new JdbcTemplate(ds);
     }
 }
