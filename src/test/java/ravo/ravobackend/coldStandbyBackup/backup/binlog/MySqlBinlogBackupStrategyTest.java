@@ -5,6 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ravo.ravobackend.coldStandbyBackup.backup.BackupRequest;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.BinlogInfo;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.BinlogQueryService;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 import ravo.ravobackend.global.util.CommandRequest;
 import ravo.ravobackend.global.util.CommandResult;
@@ -12,6 +14,7 @@ import ravo.ravobackend.global.util.ShellCommandExecutor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -20,12 +23,14 @@ class MySqlBinlogBackupStrategyTest {
 
     private ShellCommandExecutor shellCommandExecutor;
     private MySqlBinlogBackupStrategy strategy;
+    private BinlogQueryService binlogQueryService;
     private Path tempDir;
 
     @BeforeEach
     void setUp() throws Exception {
         shellCommandExecutor = Mockito.mock(ShellCommandExecutor.class);
-        strategy = new MySqlBinlogBackupStrategy(shellCommandExecutor);
+        binlogQueryService = Mockito.mock(BinlogQueryService.class);
+        strategy = new MySqlBinlogBackupStrategy(shellCommandExecutor, binlogQueryService);
         tempDir = Files.createTempDirectory("backup-test");
     }
 
@@ -46,6 +51,10 @@ class MySqlBinlogBackupStrategyTest {
                 .gtidRange("uuid:101-120")
                 .build();
 
+        List<BinlogInfo> fakeBinlogs = List.of(
+                new BinlogInfo("binlog.000001", 1024L, false)
+        );
+        when(binlogQueryService.getBinlogFiles()).thenReturn(fakeBinlogs);
         when(shellCommandExecutor.execute(any(CommandRequest.class)))
                 .thenReturn(CommandResult.builder().exitCode(0).build());
 

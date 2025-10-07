@@ -22,7 +22,7 @@ public class BinlogQueryService {
     /**
      * 현재 사용 중인 binlog 파일 목록 조회
      */
-    private List<BinlogInfo> getBinlogFiles() {
+    public List<BinlogInfo> getBinlogFiles() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(standbyDataSource);
 
         List<BinlogInfo> binlogFiles = jdbcTemplate.query(
