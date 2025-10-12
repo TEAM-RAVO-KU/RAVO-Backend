@@ -40,8 +40,9 @@ public class BinlogRecoveryTasklet implements Tasklet {
         log.info("Recovering from dumpFile={}", dumpFile);
         Path dumpPath = Paths.get(dumpFile);
 
+        //gtid 차이가 없는 경우 파일이 만들어지지 않으므로 정상 종료
         if (!Files.exists(dumpPath)) {
-            throw new FileNotFoundException("SQL dump file not found: " + dumpPath);
+            return RepeatStatus.FINISHED;
         }
         log.info("Starting recovery from dump file: {}", dumpPath);
 
