@@ -2,6 +2,10 @@ package ravo.ravobackend.global.constants;
 
 public enum TargetDB {
 
-    ACTIVE, STANDBY
+    ACTIVE, STANDBY, UNKNOWN;
 
+    @Override
+    public String toString() {
+        return name();
+    }
 }
