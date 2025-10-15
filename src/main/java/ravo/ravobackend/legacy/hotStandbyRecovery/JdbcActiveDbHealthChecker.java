@@ -12,7 +12,7 @@ public class JdbcActiveDbHealthChecker implements ActiveDbHealthChecker {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public JdbcActiveDbHealthChecker(@Qualifier("activeJdbcTemplate") JdbcTemplate jdbcTemplate) {
+    public JdbcActiveDbHealthChecker(@Qualifier("directActiveJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
