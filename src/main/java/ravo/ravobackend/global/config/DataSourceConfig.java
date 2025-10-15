@@ -27,12 +27,6 @@ public class DataSourceConfig {
     }
 
     @Bean
-    @ConfigurationProperties("spring.datasource.direct-active")
-    public DataSource directActiveDataSource() {
-        return DataSourceBuilder.create().build();
-    }
-
-    @Bean
     @ConfigurationProperties("spring.datasource.standby")
     public DataSource standbyDataSource() {
         return DataSourceBuilder.create().build();
@@ -40,11 +34,6 @@ public class DataSourceConfig {
 
     @Bean
     public JdbcTemplate activeJdbcTemplate(@Qualifier("activeDataSource") DataSource ds) {
-        return new JdbcTemplate(ds);
-    }
-
-    @Bean
-    public JdbcTemplate directActiveJdbcTemplate(@Qualifier("directActiveDataSource") DataSource ds) {
         return new JdbcTemplate(ds);
     }
 
