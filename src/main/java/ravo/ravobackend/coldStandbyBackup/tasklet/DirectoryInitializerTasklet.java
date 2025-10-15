@@ -37,7 +37,7 @@ public class DirectoryInitializerTasklet implements Tasklet {
         Files.createDirectories(dumpPath); // NIO 기반, 예외 발생 시 IOException
 
         String ts = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        Path backupFilePath = dumpPath.resolve(props.getDatabase() + "_cold_" + ts + ".sql");
+        Path backupFilePath = dumpPath.resolve(props.getDatabase() + "_" + ts);
 
         // ExecutionContext에는 문자열로 저장
         jobContext.putString(BACKUP_OUT_FILE, backupFilePath.toAbsolutePath().toString());
