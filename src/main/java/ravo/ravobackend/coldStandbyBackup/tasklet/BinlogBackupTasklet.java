@@ -66,7 +66,7 @@ public class BinlogBackupTasklet implements Tasklet {
         GTID gtidRange = gtidRangeOpt.get();
         String gtidRangeStr = gtidRange.getStart() + "-" + gtidRange.getEnd();
         backupDir = backupDir.resolve(gtidRangeStr + ".sql");
-
+        jobContext.putString(BACKUP_OUT_FILE, backupDir.toAbsolutePath().toString());
         Files.createDirectories(backupDir.getParent());
         //첫번째 binlog 파일명 조회
         String firstBinlogFile = binlogQueryService.getFirstBinlogFile();

@@ -23,7 +23,7 @@ public class JdbcActiveDbHealthChecker implements ActiveDbHealthChecker {
             jdbcTemplate.queryForObject("select 1", Integer.class);
             return true;
         } catch (DataAccessException e) {
-            log.warn("Active DB 연결 실패. 다음 스케줄에서 재시도합니다.", e);
+            log.debug("Active DB 연결 실패. 다음 스케줄에서 재시도합니다.", e);
             return false;
         }
     }
