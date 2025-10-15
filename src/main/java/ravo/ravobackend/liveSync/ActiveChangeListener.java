@@ -6,6 +6,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.GTID;
+import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.GtidService;
+import ravo.ravobackend.global.constants.TargetDB;
 
 @Slf4j
 @Component
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class ActiveChangeListener {
 
     private final ChangeDispatcher dispatcher;
+    private final GtidService gtidService;
 
     @KafkaListener(
             id = "${ravo.live-sync.listener-id}",
@@ -28,7 +32,18 @@ public class ActiveChangeListener {
                 return;
             }
 
+            log.info("[LIVE-SYNC] Received record: topic={}, partition={}, offset={}",
+                    record.topic(), record.partition(), record.offset());
+
             dispatcher.dispatch(record);
+
+            log.info("--------------------");
+
+            GTID currentGtidFromStandby = gtidService.getCurrentGtidFromStandby();
+            gtidService.saveGtid(TargetDB.STANDBY, currentGtidFromStandby);
+
+            log.info("==================");
+
             ack.acknowledge();  // standby DB에 반영 성공한 뒤에만 커밋
         } catch (Exception e) {
             log.error("[LIVE-SYNC] Failed to apply change. topic={}, partition={}, offset={}, err={}",

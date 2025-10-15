@@ -2,6 +2,7 @@ package ravo.ravobackend.liveSync;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DmlApplier {
 
     private final @Qualifier("standbyJdbcTemplate") JdbcTemplate standbyJdbcTemplate;
@@ -36,6 +38,8 @@ public class DmlApplier {
         String sql = "INSERT INTO " + table + " (" + columns + ") VALUES (" + placeholders + ")";
 
         standbyJdbcTemplate.update(sql, cols.values().toArray());
+
+        log.info("insert 완료");
     }
 
     private  void update(DmlEvent e) {

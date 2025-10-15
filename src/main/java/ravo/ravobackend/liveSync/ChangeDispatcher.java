@@ -1,11 +1,13 @@
 package ravo.ravobackend.liveSync;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ChangeDispatcher {
 
     private final DebeziumEventParser parser;
@@ -33,6 +35,9 @@ public class ChangeDispatcher {
             if (dml == null) return;
 
             dmlApplier.apply(dml);
+
+            log.info("테이블 dml 적용 완료");
+
             return;
         }
 

@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ravo.ravobackend.global.constants.TargetDB;
-import ravo.ravobackend.hotStandbyRecovery.ActiveDbHealthChecker;
+import ravo.ravobackend.legacy.hotStandbyRecovery.ActiveDbHealthChecker;
 
 @Slf4j
 @Service
@@ -34,19 +34,23 @@ public class BinlogBackupRecoveryTrigger {
         lastTargetDB = statusChecker.fetchStatus();
     }
 
-    @Scheduled(fixedDelay = 30_000)
+    @Scheduled(fixedDelay = 1000)
     public void monitorAndTrigger() {
         TargetDB currentTargetDB = statusChecker.fetchStatus();
         log.info("Current DB status: {}, last DB status: {}", currentTargetDB, lastTargetDB);
-        if(activeDbHealthChecker.isHealthy() && currentTargetDB == TargetDB.STANDBY) {
+        if(lastTargetDB == TargetDB.STANDBY && currentTargetDB == TargetDB.ACTIVE) {
             log.info("Binlog Backup Recovery Triggered");
             try {
                 long ts = System.currentTimeMillis();
                 JobParameters jobParameters = new JobParametersBuilder().addLong("ts", ts).toJobParameters();
+
+//                //failover watcher 상태 Active로 변경
+//                restTemplate.getForObject(recoverUrl, Void.class);
+
                 //recovery 실행
                 jobLauncher.run(binlogBackupRecoveryJob, jobParameters);
-                //failover watcher 상태 Active로 변경
-                restTemplate.postForObject(recoverUrl, null, String.class);
+//                //failover watcher 상태 Active로 변경
+//                restTemplate.getForObject(recoverUrl, Void.class);
             } catch (Exception e) {
                 log.error("Failed to run binlog backup recovery job", e);
             }
