@@ -1,4 +1,4 @@
-package ravo.ravobackend.hotStandbyRecovery;
+package ravo.ravobackend.legacy.hotStandbyRecovery;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

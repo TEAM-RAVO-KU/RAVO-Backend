@@ -1,4 +1,4 @@
-package ravo.ravobackend.hotStandbyRecovery;
+package ravo.ravobackend.legacy.hotStandbyRecovery;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
