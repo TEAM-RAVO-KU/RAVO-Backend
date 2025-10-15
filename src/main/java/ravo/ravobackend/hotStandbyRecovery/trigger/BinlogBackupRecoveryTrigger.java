@@ -22,23 +22,25 @@ public class BinlogBackupRecoveryTrigger {
     private final JobLauncher jobLauncher;
     private final Job binlogBackupRecoveryJob;
     private final StatusChecker statusChecker;
-    private final ActiveDbHealthChecker activeDbHealthChecker;
     private static TargetDB lastTargetDB;
+    private final ActiveDbHealthChecker activeDbHealthChecker;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${application.failover.recover-url}")
     private String recoverUrl;
 
-    @PostConstruct
-    public void init() {
-        lastTargetDB = statusChecker.fetchStatus();
-    }
+//    @PostConstruct
+//    public void init() {
+//        lastTargetDB = statusChecker.fetchStatus();
+//    }
 
     @Scheduled(fixedDelay = 1000)
     public void monitorAndTrigger() {
         TargetDB currentTargetDB = statusChecker.fetchStatus();
         log.info("Current DB status: {}, last DB status: {}", currentTargetDB, lastTargetDB);
-        if(activeDbHealthChecker.isHealthy() && currentTargetDB == TargetDB.STANDBY) {
+
+        if (activeDbHealthChecker.isHealthy() && currentTargetDB.equals(TargetDB.STANDBY)) {
             log.info("Binlog Backup Recovery Triggered");
             try {
                 long ts = System.currentTimeMillis();
@@ -47,8 +49,9 @@ public class BinlogBackupRecoveryTrigger {
                 //recovery 실행
                 jobLauncher.run(binlogBackupRecoveryJob, jobParameters);
 
-                //failover watcher 상태 Active로 변경
+                //recover API 호출
                 restTemplate.getForObject(recoverUrl, Void.class);
+
             } catch (Exception e) {
                 log.error("Failed to run binlog backup recovery job", e);
             }

@@ -37,12 +37,8 @@ public class ActiveChangeListener {
 
             dispatcher.dispatch(record);
 
-            log.info("--------------------");
-
             GTID currentGtidFromStandby = gtidService.getCurrentGtidFromStandby();
             gtidService.saveGtid(TargetDB.STANDBY, currentGtidFromStandby);
-
-            log.info("==================");
 
             ack.acknowledge();  // standby DB에 반영 성공한 뒤에만 커밋
         } catch (Exception e) {
