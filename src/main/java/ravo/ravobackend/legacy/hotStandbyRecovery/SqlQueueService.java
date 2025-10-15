@@ -1,4 +1,4 @@
-package ravo.ravobackend.hotStandbyRecovery;
+package ravo.ravobackend.legacy.hotStandbyRecovery;
 
 import java.util.List;
 

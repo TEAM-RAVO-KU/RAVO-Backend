@@ -5,6 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ravo.ravobackend.legacy.hotStandbyRecovery.ActiveDbHealthChecker;
+import ravo.ravobackend.legacy.hotStandbyRecovery.InMemorySqlQueueService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
