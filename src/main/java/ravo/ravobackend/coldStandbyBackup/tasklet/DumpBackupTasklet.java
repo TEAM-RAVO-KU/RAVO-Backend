@@ -13,6 +13,7 @@ import ravo.ravobackend.coldStandbyBackup.backup.BackupStrategyFactory;
 import ravo.ravobackend.global.constants.BackupType;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -32,6 +33,8 @@ public class DumpBackupTasklet implements Tasklet {
         Path backupDir = Paths.get(jobContext.getString(BACKUP_OUT_FILE));
 
         BackupStrategy backupStrategy = factory.getBackupStrategy(BackupType.MYSQL_DUMP);
+        backupDir = backupDir.resolve("full.sql");
+        Files.createDirectories(backupDir.getParent());
 
         BackupRequest req = BackupRequest.builder()
                 .props(props)

@@ -18,6 +18,7 @@ import ravo.ravobackend.global.constants.BackupType;
 import ravo.ravobackend.global.constants.TargetDB;
 import ravo.ravobackend.global.domain.DatabaseProperties;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -63,9 +64,10 @@ public class BinlogBackupTasklet implements Tasklet {
         }
 
         GTID gtidRange = gtidRangeOpt.get();
-        String gtidRangeStr = gtidRange.toString();
-        backupDir = backupDir.resolve(gtidRangeStr.substring(gtidRangeStr.length()-10) + ".sql");
+        String gtidRangeStr = gtidRange.getStart() + "-" + gtidRange.getEnd();
+        backupDir = backupDir.resolve(gtidRangeStr + ".sql");
 
+        Files.createDirectories(backupDir.getParent());
         //첫번째 binlog 파일명 조회
         String firstBinlogFile = binlogQueryService.getFirstBinlogFile();
 
