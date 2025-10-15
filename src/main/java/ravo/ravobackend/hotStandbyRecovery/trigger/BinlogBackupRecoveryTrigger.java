@@ -7,9 +7,12 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import ravo.ravobackend.global.constants.TargetDB;
+import ravo.ravobackend.legacy.hotStandbyRecovery.ActiveDbHealthChecker;
 
 @Slf4j
 @Service
@@ -19,7 +22,12 @@ public class BinlogBackupRecoveryTrigger {
     private final JobLauncher jobLauncher;
     private final Job binlogBackupRecoveryJob;
     private final StatusChecker statusChecker;
+    private final ActiveDbHealthChecker activeDbHealthChecker;
     private static TargetDB lastTargetDB;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${application.failover.recover-url}")
+    private String recoverUrl;
 
     @PostConstruct
     public void init() {
@@ -30,7 +38,7 @@ public class BinlogBackupRecoveryTrigger {
     public void monitorAndTrigger() {
         TargetDB currentTargetDB = statusChecker.fetchStatus();
         log.info("Current DB status: {}, last DB status: {}", currentTargetDB, lastTargetDB);
-        if(lastTargetDB == TargetDB.STANDBY && currentTargetDB == TargetDB.ACTIVE) {
+        if(activeDbHealthChecker.isHealthy() && currentTargetDB == TargetDB.STANDBY) {
             log.info("Binlog Backup Recovery Triggered");
             try {
                 long ts = System.currentTimeMillis();
@@ -39,6 +47,8 @@ public class BinlogBackupRecoveryTrigger {
                 //recovery 실행
                 jobLauncher.run(binlogBackupRecoveryJob, jobParameters);
 
+                //failover watcher 상태 Active로 변경
+                restTemplate.getForObject(recoverUrl, Void.class);
             } catch (Exception e) {
                 log.error("Failed to run binlog backup recovery job", e);
             }
