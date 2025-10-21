@@ -35,12 +35,13 @@ public class ActiveChangeListener {
             log.info("[LIVE-SYNC] Received record: topic={}, partition={}, offset={}",
                     record.topic(), record.partition(), record.offset());
 
-            dispatcher.dispatch(record);
+            if (dispatcher.dispatch(record)) {  // 적용된 경우에만 standby GTID 값을 저장
+                GTID currentGtidFromStandby = gtidService.getCurrentGtidFromStandby();
+                gtidService.saveGtid(TargetDB.STANDBY, currentGtidFromStandby);
+            }
 
-            GTID currentGtidFromStandby = gtidService.getCurrentGtidFromStandby();
-            gtidService.saveGtid(TargetDB.STANDBY, currentGtidFromStandby);
-
-            ack.acknowledge();  // standby DB에 반영 성공한 뒤에만 커밋
+            // 적용/스킵과 무관하게 이 레코드는 정상 처리로 간주하고 ACK (무한 재시도 방지)
+            ack.acknowledge();
         } catch (Exception e) {
             log.error("[LIVE-SYNC] Failed to apply change. topic={}, partition={}, offset={}, err={}",
                     record.topic(), record.partition(), record.offset(), e.getMessage(), e);

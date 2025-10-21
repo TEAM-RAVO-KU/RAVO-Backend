@@ -15,6 +15,7 @@ import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.GTID;
 import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.GtidService;
 import ravo.ravobackend.global.constants.TargetDB;
 import ravo.ravobackend.legacy.hotStandbyRecovery.ActiveDbHealthChecker;
+import ravo.ravobackend.liveSync.ActiveUuidService;
 
 @Slf4j
 @Service
@@ -25,9 +26,12 @@ public class BinlogBackupRecoveryTrigger {
     private final Job binlogBackupRecoveryJob;
     private final StatusChecker statusChecker;
     private final ActiveDbHealthChecker activeDbHealthChecker;
+    private final GtidService gtidService;
+    private final ActiveUuidService activeUuidService;
+
     private static TargetDB lastTargetDB;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final GtidService gtidService;
+
     @Value("${application.failover.recover-url}")
     private String recoverUrl;
 
@@ -35,9 +39,11 @@ public class BinlogBackupRecoveryTrigger {
     public void monitorAndTrigger() {
         TargetDB currentTargetDB = statusChecker.fetchStatus();
         log.info("Current DB status: {}, last DB status: {}", currentTargetDB, lastTargetDB);
+
         if(activeDbHealthChecker.isHealthy() && currentTargetDB == TargetDB.STANDBY) {
             log.info("Binlog Backup Recovery Triggered");
             try {
+                // 1) standby → active 증분 백업을 GTID 동기화까지 반복
                 while(true) {
                     GTID currentGtid = gtidService.getCurrentGtidFromStandby();
                     // 2. 마지막 저장된 GTID 조회 (Optional)
@@ -54,8 +60,20 @@ public class BinlogBackupRecoveryTrigger {
                     jobLauncher.run(binlogBackupRecoveryJob, jobParameters);
                 }
 
-                //failover watcher 상태 Active로 변경
+                // 2) /recover 호출 직전에 active DB의 UUID 갱신 (direct-active URL 기준)
+                try {
+                    activeUuidService.refreshActiveUuid();
+                    log.info("[RECOVER] Active DB UUID refreshed to {}", activeUuidService.getActiveUuid());
+                } catch (Exception uuidEx) {
+                    // 안전하게 fail-close: UUID 못 얻으면 /recover 보류해 재시도(다음 스케줄틱에 다시 시도)
+                    log.warn("[RECOVER] Failed to refresh active UUID. Will skip /recover this tick.", uuidEx);
+                    lastTargetDB = currentTargetDB;
+                    return;
+                }
+
+                // 3) failover watcher 상태 Active로 변경 & Debezium 재기동 트리거
                 restTemplate.getForObject(recoverUrl, Void.class);
+                log.info("[RECOVER] Recover endpoint called successfully.");
             } catch (Exception e) {
                 log.error("Failed to run binlog backup recovery job", e);
             }
