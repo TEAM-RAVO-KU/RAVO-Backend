@@ -1,5 +1,6 @@
 package ravo.ravobackend.hotStandbyRecovery.trigger;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,12 +11,13 @@ import ravo.ravobackend.global.constants.TargetDB;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StatusChecker {
 
     @Value("${application.failover.status-url}")
     private String statusUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     /**
      * Failover Manager의 /status API를 호출하여 watcher_state 기반으로 역할 판단
