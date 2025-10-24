@@ -1,9 +1,8 @@
-### 1. Gradle 빌드
-FROM eclipse-temurin:21-jdk AS builder
-
+### 1) Build stage (JDK 17로 변경)
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
 
-# Gradle Wrapper관련 파일 복사
+# Gradle wrapper 먼저 복사 -> 캐시 효율
 COPY gradlew .
 COPY gradle/ ./gradle/
 COPY build.gradle .
@@ -12,21 +11,19 @@ COPY settings.gradle .
 # 소스 복사
 COPY src/ ./src/
 
-# gradlew 실행 권한 부여
+# 실행 권한
 RUN chmod +x gradlew
 
-# Gradle 빌드 수행
-RUN ./gradlew clean build
+# (옵션) 빌드 캐시 활용
+# RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon clean build -x test
+RUN ./gradlew clean build -x test
 
-### 2. 최종 실행 환경
-FROM eclipse-temurin:21-jdk
+### 2) Runtime stage
+FROM eclipse-temurin:17-jre
+WORKDIR /opt/app
 
-# 빌드된 JAR 파일을 복사
-# 버전이 바뀌어도 build/libs/ 내부의 하나의 JAR만 복사하려면, 아래처럼 와일드카드를 사용
-COPY --from=builder /app/build/libs/*.jar ravo-manager.jar
+# 산출물 복사
+COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 실행 포트
 EXPOSE 8080
-
-# 컨테이너 실행 시 Spring Boot JAR 파일 실행
-ENTRYPOINT ["java", "-jar", "/ravo-manager.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
