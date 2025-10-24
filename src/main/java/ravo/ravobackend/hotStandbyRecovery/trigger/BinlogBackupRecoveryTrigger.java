@@ -93,7 +93,7 @@ public class BinlogBackupRecoveryTrigger {
                 }
 
                 // 5) active 로의 전환이 확인되면 FE 와 통신
-                if (waitUntilActive(5000L, 500L)) {
+                if (waitUntilActive(30000L, 1000L)) {
                     log.info("[RECOVER] Active DB status confirmed. Unlocking FE UI...");
 
                     try {
