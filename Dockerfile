@@ -26,19 +26,14 @@ WORKDIR /opt/app
 # root 권한으로 패키지 설치 및 디렉터리 생성
 USER root
 RUN apt-get update && \
-    # mysql-client 설치 (mysqldump 포함)
-    apt-get install -y mysql-client && \
-    # apt 캐시 삭제
+    # mysql-client와 mysql-server 설치
+    apt-get install -y mysql-client mysql-server && \
     rm -rf /var/lib/apt/lists/* && \
-    # 백업 디렉터리 생성
     mkdir -p /opt/ravo/backup && \
-    # temurin 이미지의 기본 사용자(uid 1001, gid 0)에게 소유권 부여
     chown -R 1001:0 /opt/ravo/backup
 
-# 산출물 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# === Changed: 다시 non-root 사용자로 전환 ===
 USER 1001
 
 EXPOSE 8080
