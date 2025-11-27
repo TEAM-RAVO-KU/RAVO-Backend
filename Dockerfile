@@ -22,8 +22,19 @@ RUN ./gradlew clean build -x test
 FROM eclipse-temurin:17-jre
 WORKDIR /opt/app
 
-# 산출물 복사
+# === Changed: mysqldump 설치 및 백업 디렉터리 생성/권한 설정 ===
+# root 권한으로 패키지 설치 및 디렉터리 생성
+USER root
+RUN apt-get update && \
+    # mysql-client와 mysql-server 설치
+    apt-get install -y mysql-client mysql-server && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /opt/ravo/backup && \
+    chown -R 1001:0 /opt/ravo/backup
+
 COPY --from=builder /app/build/libs/*.jar app.jar
+
+USER 1001
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
