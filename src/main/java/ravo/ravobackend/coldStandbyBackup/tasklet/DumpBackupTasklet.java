@@ -16,6 +16,8 @@ import ravo.ravobackend.global.domain.DatabaseProperties;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import ravo.ravobackend.global.service.SystemEventFactory;
+import ravo.ravobackend.global.service.SystemEventPublisher;
 
 import static ravo.ravobackend.global.constants.JobExecutionContextKeys.BACKUP_OUT_FILE;
 import static ravo.ravobackend.global.constants.JobExecutionContextKeys.TARGET_DATABASE_PROPERTIES;
@@ -25,7 +27,7 @@ import static ravo.ravobackend.global.constants.JobExecutionContextKeys.TARGET_D
 public class DumpBackupTasklet implements Tasklet {
 
     private final BackupStrategyFactory factory;
-
+    private final SystemEventPublisher publisher;
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         ExecutionContext jobContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
@@ -43,6 +45,7 @@ public class DumpBackupTasklet implements Tasklet {
 
         backupStrategy.backup(req);
 
+        publisher.publish(SystemEventFactory.dumpBackupComplete(null));
         return RepeatStatus.FINISHED;
     }
 }

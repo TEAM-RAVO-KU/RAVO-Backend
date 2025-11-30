@@ -14,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.GTID;
 import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.GtidService;
 import ravo.ravobackend.global.constants.TargetDB;
+import ravo.ravobackend.global.service.SystemEventFactory;
+import ravo.ravobackend.global.service.SystemEventPublisher;
 import ravo.ravobackend.legacy.hotStandbyRecovery.ActiveDbHealthChecker;
 import ravo.ravobackend.liveSync.ActiveUuidService;
 
@@ -28,6 +30,7 @@ public class BinlogBackupRecoveryTrigger {
     private final ActiveDbHealthChecker activeDbHealthChecker;
     private final GtidService gtidService;
     private final ActiveUuidService activeUuidService;
+    private final SystemEventPublisher publisher;
 
     private static TargetDB lastTargetDB;
     private final RestTemplate restTemplate;
@@ -44,8 +47,14 @@ public class BinlogBackupRecoveryTrigger {
     public void monitorAndTrigger() {
         TargetDB currentTargetDB = statusChecker.fetchStatus();
         log.info("Current DB status: {}, last DB status: {}", currentTargetDB, lastTargetDB);
-
+        if(lastTargetDB == TargetDB.ACTIVE && currentTargetDB == TargetDB.STANDBY) {
+            publisher.publish(SystemEventFactory.activeDbFailure(null));
+            publisher.publish(SystemEventFactory.failoverSuccess(null));
+        }
         if (activeDbHealthChecker.isHealthy() && currentTargetDB == TargetDB.STANDBY) {
+            //시스템 이벤트 발행
+            publisher.publish(SystemEventFactory.activeDbRecover(null));
+
             log.info("Binlog Backup Recovery Triggered");
             try {
                 // 1) active DB의 UUID 갱신 (direct-active URL 기준)
@@ -59,6 +68,8 @@ public class BinlogBackupRecoveryTrigger {
                     return;
                 }
 
+
+                publisher.publish(SystemEventFactory.recoveryStarted(null));
                 // 2) standby → active 증분 백업을 GTID 동기화까지 반복
                 while (true) {
                     GTID currentGtid = gtidService.getCurrentGtidFromStandby();
@@ -74,6 +85,8 @@ public class BinlogBackupRecoveryTrigger {
                     JobParameters jobParameters = new JobParametersBuilder().addLong("ts", ts).toJobParameters();
                     jobLauncher.run(binlogBackupRecoveryJob, jobParameters);
                 }
+
+
 
                 // 3) FE 통신 (DB watcher 변경 직전 FE 비활성화)
                 // TODO : ravo-backend 가 client 와 통신하는게 어색한 듯. 논의 필요
@@ -109,8 +122,10 @@ public class BinlogBackupRecoveryTrigger {
                     restTemplate.postForObject(uiUnlockUrl, null, Void.class);
                 }
             } catch (Exception e) {
+                publisher.publish(SystemEventFactory.recoveryFailed(null));
                 log.error("Failed to run binlog backup recovery job", e);
             }
+            publisher.publish(SystemEventFactory.resyncCompleted(null));
         }
 
         lastTargetDB = currentTargetDB;

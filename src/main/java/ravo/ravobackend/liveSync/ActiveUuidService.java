@@ -1,5 +1,6 @@
 package ravo.ravobackend.liveSync;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,5 +32,10 @@ public class ActiveUuidService {
         String uuid = cachedActiveUuid.get();
         if (uuid != null) return uuid;
         return refreshActiveUuid();
+    }
+
+    @PostConstruct
+    public void init() {
+        refreshActiveUuid();
     }
 }
