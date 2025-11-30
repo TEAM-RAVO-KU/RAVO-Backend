@@ -3,7 +3,7 @@ package ravo.ravobackend.global.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ravo.ravobackend.global.domain.DatabaseProperties;
+import ravo.ravobackend.global.constants.DatabaseProperties;
 
 @Configuration
 public class DatabaseConfig {
