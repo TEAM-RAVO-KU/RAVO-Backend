@@ -6,8 +6,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import ravo.ravobackend.coldStandbyBackup.backup.binlog.domain.GTID;
-import ravo.ravobackend.coldStandbyBackup.backup.binlog.service.GtidService;
+import ravo.ravobackend.recovery.auto.domain.GTID;
+import ravo.ravobackend.recovery.auto.service.GtidService;
 import ravo.ravobackend.global.constants.TargetDB;
 
 @Slf4j
